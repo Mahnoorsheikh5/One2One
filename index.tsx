@@ -1,58 +1,176 @@
-import React from 'react'
-import { View,
-     Text, 
-     Image, 
-     TouchableWithoutFeedback 
-    } 
-     from "react-native";
-import { ChatRoom } from "../../types";
-import styles from './style';
-import moment from 'moment';
+/**
+ * If you are not familiar with React Navigation, refer to the "Fundamentals" guide:
+ * https://reactnavigation.org/docs/getting-started
+ *
+ */
+import { FontAwesome, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import {Fontisto} from "@expo/vector-icons"
+import * as React from 'react';
+import { ColorSchemeName, Pressable, View, color } from 'react-native';
+import ChatRoomScreen from '../screens/ChatRoomScreen';
+
+import Colors from '../constants/Colors';
+import useColorScheme from '../hooks/useColorScheme';
+import ModalScreen from '../screens/ModalScreen';
+import NotFoundScreen from '../screens/NotFoundScreen';
+import TabOneScreen from '../screens/TabOneScreen';
+import ChatsScreen from '../screens/ChatsScreen';
+import TabThreeScreen from '../screens/TabThreeScreen';
+import TabFourScreen from '../screens/TabFourScreen';
+import { RootStackParamList, RootTabParamList, RootTabScreenProps, MainTabPramList } from '../types';
+import LinkingConfiguration from './LinkingConfiguration';
 
 
-export type ChatListItemProps = {
-    chatRoom: ChatRoom;
-
+export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
+  return (
+    <NavigationContainer
+      linking={LinkingConfiguration}
+      theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <RootNavigator />
+    </NavigationContainer>
+  );
 }
 
-const ChatListItem = (props: ChatListItemProps) => {
-    const {chatRoom } = props;
-   const user = chatRoom.users[1];
+/**
+ * A root stack navigator is often used for displaying modals on top of all other content.
+ * https://reactnavigation.org/docs/modal
+ */
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-    const onClick = () => {
-        console.warn('Clicked on ${user.name}')
-    }
+function RootNavigator() {
+  return (
+    <Stack.Navigator screenOptions = {{
 
+        headerStyle:{
+          
+          backgroundColor: Colors.light.tint,
+          elevation: 0,
 
-
-
-    
-return (
-    <TouchableWithoutFeedback onPress = {onClick}>
-        <View style = {styles.container}>
-        <View style ={styles.leftContainer}>
-
-        <Image source= {{ uri: user.imageUri  }} style={styles.avatar} />
-
-        <View style ={styles.midContainer}>
-
-            <Text style ={styles.username}>{user.name}</Text>
-
-            <Text numberOfLines={2} style= {styles.lastMessage}>{chatRoom.lastMessage.content}</Text>
-
-        </View>
-            
-        </View>
-        
-            
-        <Text style={styles.time}>
-            {moment(chatRoom.lastMessage.createdAt).format ( "DD/MM/YYYY" )}
-            
-            </Text>
-
+          
+          },
+          headerTintColor: Colors.light.background,
+          headerTitleAlign: 'left',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+           
+          }
+  
+        }}
       
-      </View>
-    </TouchableWithoutFeedback>
-)
-};
-export default ChatListItem;
+        >
+        <Stack.Screen 
+        name="Root"
+        component={MainTabNavigator} 
+        options={{
+        title: "WhatsApp",
+        
+        headerRight:() => (
+          <View style={{flexDirection: 'row',
+           width: 60,
+            justifyContent: 'space-between', 
+            marginRight: 10,
+            headerTransparent: true,
+            }}>
+
+            <Octicons name= "search" size = {22} color = {'white'}/>
+            <MaterialCommunityIcons name = "dots-vertical" size = {22} color = {'white'}/>
+
+          </View>
+        )
+        }}
+        />
+
+        
+      <Stack.Screen 
+      name="Chat Room"
+      component={ChatRoomScreen} 
+      options={{ title: 'Chat Room ' }} 
+      />
+
+
+      <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Modal" component={ModalScreen} />
+      </Stack.Group>
+    </Stack.Navigator>
+  );
+}
+
+/**
+ * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
+ * https://reactnavigation.org/docs/bottom-tab-navigator
+ */
+const MainTab = createMaterialTopTabNavigator<MainTabParamList>();
+
+function MainTabNavigator() {
+  const colorScheme = useColorScheme();
+
+  return (
+    <MainTab.Navigator
+      initialRouteName="TabOne"
+
+      tabBarOptions={{
+        activeTintColor: Colors[colorScheme]. background,
+        style: {
+          height: 55,
+          backgroundColor: Colors[colorScheme].tint,
+        },
+        indicatorStyle: {
+          backgroundColor: Colors[colorScheme].background,
+          height: 2,
+        },
+        labelStyle:{
+          fontWeight: 'bold',
+          
+        },
+        showIcon: true,
+      }}>
+  <MainTab.Screen
+        name="Camera"
+        component={TabOneScreen}
+        options={{
+          tabBarIcon: ({  color: string  }) => <Fontisto name= "camera" color={color} size = {18} />,
+          tabBarLabel: () => null
+        }}
+      />
+      <MainTab.Screen
+        name="Chats"
+        component={ChatsScreen}
+        options={{
+        
+        
+        }}
+      />
+      <MainTab.Screen
+        name="Status"
+        component={TabThreeScreen}
+        options={{
+        
+          
+        }}
+      />
+      <MainTab.Screen
+        name="Calls"
+        component={TabFourScreen}
+        options={{
+          
+          
+        }}
+      />
+      
+       </MainTab.Navigator>
+  );
+}
+
+/**
+ * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
+ */
+function TabBarIcon(props: {
+  name: React.ComponentProps<typeof FontAwesome>['name'];
+  color: string;
+}) {
+  return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
+}
